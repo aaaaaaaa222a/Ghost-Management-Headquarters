@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>고스트 헌터 카드 생성기</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', Arial, sans-serif;
+      color: #17364d;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(143, 194, 223, 0.42), transparent 32%),
+        radial-gradient(circle at 80% 0%, rgba(246, 251, 255, 0.9), transparent 28%),
+        linear-gradient(135deg, #eef8ff 0%, #ffffff 52%, #e7f4fb 100%);
+      padding: 32px 16px;
+    }
+
+    .page {
+      width: min(100%, 1120px);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid #c5deee;
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: 0 16px 34px rgba(35, 90, 130, 0.12);
+      backdrop-filter: blur(10px);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: -0.8px;
+    }
+
+    .sub {
+      margin: 0 0 22px;
+      color: #5a89a5;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #5a89a5;
+      letter-spacing: 0.4px;
+      margin-bottom: 7px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid #b9d8ea;
+      background: #ffffff;
+      color: #17364d;
+      border-radius: 14px;
+      padding: 12px 13px;
+      font: inherit;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #2f82b7;
+      box-shadow: 0 0 0 4px rgba(47, 130, 183, 0.12);
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    textarea {
+      min-height: 170px;
+      resize: vertical;
+      line-height: 1.45;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      background: #2f82b7;
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 18px rgba(47, 130, 183, 0.22);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button.secondary {
+      background: #ffffff;
+      color: #2f82b7;
+      border: 1px solid #b9d8ea;
+      box-shadow: none;
+    }
+
+    .preview-wrap {
+      position: sticky;
+      top: 20px;
+    }
+
+    .preview-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      color: #5a89a5;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    .card-shell {
+      width: min(100%, 360px);
+      margin: 0 auto;
+      padding: 16px 10px;
+      color: #17364d;
+      line-height: 1.35;
+    }
+
+    .ghost-card {
+      background: var(--card-bg, #f6fbff);
+      border: 1px solid var(--line, #b9d8ea);
+      border-radius: 20px;
+      padding: 12px;
+      margin-bottom: 16px;
+      box-shadow: 0 8px 18px rgba(35,90,130,0.10);
+      overflow: hidden;
+    }
+
+    .top-text {
+      text-align: right;
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--muted, #5a89a5);
+      letter-spacing: 0.2px;
+      margin-bottom: 6px;
+    }
+
+    .divider {
+      height: 2px;
+      background: var(--soft-line, #c5deee);
+      border-radius: 999px;
+      margin-bottom: 10px;
+    }
+
+    .main-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .photo-box {
+      flex: 0 0 112px;
+      width: 112px;
+      background: #ffffff;
+      border: 1px solid var(--soft-line, #c5deee);
+      border-radius: 15px;
+      padding: 6px;
+      box-shadow: 0 5px 12px rgba(35,90,130,0.07);
+    }
+
+    .photo-box img {
+      width: 100%;
+      height: 112px;
+      object-fit: cover;
+      border-radius: 10px;
+      display: block;
+      background: #e5f1f8;
+    }
+
+    .info-side {
+      flex: 1 1 auto;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .top-info {
+      display: flex;
+      gap: 7px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+
+    .name-area {
+      flex: 1 1 42%;
+      min-width: 0;
+    }
+
+    .label-small {
+      font-size: 8px;
+      color: #7fa9be;
+      font-weight: bold;
+      letter-spacing: 0.8px;
+      margin-bottom: 2px;
+    }
+
+    .name-value {
+      font-size: 17px;
+      line-height: 1.1;
+      font-weight: bold;
+      color: #17364d;
+      letter-spacing: -0.4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .hunter-area {
+      flex: 0 0 auto;
+      max-width: 58%;
+      min-width: 0;
+      text-align: right;
+    }
+
+    .hunter-pill {
+      display: block;
+      background: #ffffff;
+      border: 1px solid var(--soft-line, #c5deee);
+      border-radius: 999px;
+      padding: 3px 7px;
+      font-size: 8px;
+      line-height: 1.1;
+      font-weight: bold;
+      color: #376f93;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+
+    .aff-row {
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .aff-box {
+      flex: 1 1 auto;
+      min-width: 0;
+      background: #ffffff;
+      border: 1px solid var(--soft-line, #c5deee);
+      border-radius: 13px;
+      padding: 7px 8px;
+    }
+
+    .aff-value {
+      font-size: 13px;
+      line-height: 1.15;
+      font-weight: bold;
+      color: #245b7b;
+      letter-spacing: -0.3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .rank-badge {
+      flex: 0 0 32px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent, #2f82b7);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 17px;
+      line-height: 1;
+      font-weight: bold;
+      box-shadow: 0 4px 9px rgba(47,130,183,0.18);
+    }
+
+    .valid {
+      text-align: right;
+      font-size: 10px;
+      font-weight: bold;
+      color: var(--muted, #5a89a5);
+      margin-bottom: 4px;
+    }
+
+    .barcode {
+      height: 18px;
+      border-radius: 6px;
+      background: repeating-linear-gradient(90deg, var(--accent, #2f82b7) 0px, var(--accent, #2f82b7) 2px, #ffffff 2px, #ffffff 5px, #8fc2df 5px, #8fc2df 7px, #ffffff 7px, #ffffff 10px);
+      border: 1px solid var(--soft-line, #c5deee);
+      opacity: 0.82;
+    }
+
+    .bottom-note {
+      background: #ffffff;
+      border: 1px solid var(--soft-line, #c5deee);
+      border-radius: 13px;
+      padding: 6px 9px;
+      margin-top: 10px;
+    }
+
+    .bottom-note div {
+      font-size: 10px;
+      color: var(--muted, #5a89a5);
+      font-weight: bold;
+      letter-spacing: 0.1px;
+      word-break: keep-all;
+    }
+
+    .toast {
+      min-height: 20px;
+      margin-top: 10px;
+      color: #2f82b7;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-wrap {
+        position: static;
+      }
+    }
+
+    @media (max-width: 520px) {
+      body {
+        padding: 18px 10px;
+      }
+
+      .panel {
+        padding: 16px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="panel">
+      <h1>고스트 헌터 카드 생성기</h1>
+      <p class="sub">내용만 바꾸면 오른쪽 카드가 바로 바뀌어. 사진은 이미지 주소를 넣으면 되고, 아래에서 완성 HTML을 복사해서 쓰면 돼.</p>
+
+      <div class="form-grid">
+        <div>
+          <label for="name">이름</label>
+          <input id="name" value="린 블레어" />
+        </div>
+
+        <div>
+          <label for="hunterNo">헌터 번호</label>
+          <input id="hunterNo" value="LB-1031C-777" />
+        </div>
+
+        <div class="full">
+          <label for="affiliation">소속</label>
+          <input id="affiliation" value="고스트 헌터 사무소 문릿" />
+        </div>
+
+        <div>
+          <label for="rank">등급</label>
+          <input id="rank" value="A" maxlength="2" />
+        </div>
+
+        <div>
+          <label for="theme">색감</label>
+          <select id="theme">
+            <option value="blue">문릿 블루</option>
+            <option value="pink">스펙터 핑크</option>
+            <option value="green">에코 그린</option>
+            <option value="purple">나이트 퍼플</option>
+          </select>
+        </div>
+
+        <div class="full">
+          <label for="photo">사진 주소</label>
+          <input id="photo" value="https://i.ibb.co/M5nKjqPp/IMG-6675.jpg" />
+        </div>
+
+        <div>
+          <label for="headquarters">상단 문구</label>
+          <input id="headquarters" value="Ghost Management Headquarters" />
+        </div>
+
+        <div>
+          <label for="valid">인증 문구</label>
+          <input id="valid" value="Valid by GMH" />
+        </div>
+
+        <div class="full">
+          <label for="note">하단 문구</label>
+          <input id="note" value="Phantom Bay Registered Ghost Hunter" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" id="copyBtn">HTML 복사하기</button>
+        <button type="button" class="secondary" id="resetBtn">처음 값으로</button>
+      </div>
+
+      <p class="toast" id="toast"></p>
+
+      <div class="full" style="margin-top: 18px;">
+        <label for="output">완성 HTML</label>
+        <textarea id="output" readonly></textarea>
+      </div>
+    </section>
+
+    <aside class="panel preview-wrap">
+      <div class="preview-title">
+        <span>미리보기</span>
+        <span id="sizeHint">360px 카드</span>
+      </div>
+      <div id="preview"></div>
+    </aside>
+  </main>
+
+  <script>
+    const fields = {
+      name: document.querySelector('#name'),
+      hunterNo: document.querySelector('#hunterNo'),
+      affiliation: document.querySelector('#affiliation'),
+      rank: document.querySelector('#rank'),
+      photo: document.querySelector('#photo'),
+      headquarters: document.querySelector('#headquarters'),
+      valid: document.querySelector('#valid'),
+      note: document.querySelector('#note'),
+      theme: document.querySelector('#theme')
+    };
+
+    const preview = document.querySelector('#preview');
+    const output = document.querySelector('#output');
+    const toast = document.querySelector('#toast');
+
+    const themes = {
+      blue: {
+        cardBg: '#f6fbff',
+        line: '#b9d8ea',
+        softLine: '#c5deee',
+        muted: '#5a89a5',
+        accent: '#2f82b7'
+      },
+      pink: {
+        cardBg: '#fff7fb',
+        line: '#edbfd3',
+        softLine: '#f2cadb',
+        muted: '#a35d7a',
+        accent: '#d15f91'
+      },
+      green: {
+        cardBg: '#f5fff9',
+        line: '#b7dfc6',
+        softLine: '#c8e9d4',
+        muted: '#5b9870',
+        accent: '#3c9b63'
+      },
+      purple: {
+        cardBg: '#faf7ff',
+        line: '#d6c2ef',
+        softLine: '#dfcdf4',
+        muted: '#7c67a6',
+        accent: '#7356b6'
+      }
+    };
+
+    const initialValues = Object.fromEntries(
+      Object.entries(fields).map(([key, el]) => [key, el.value])
+    );
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function getValues() {
+      return Object.fromEntries(
+        Object.entries(fields).map(([key, el]) => [key, el.value.trim()])
+      );
+    }
+
+    function buildCard() {
+      const v = getValues();
+      const theme = themes[v.theme] || themes.blue;
+      const photo = v.photo || 'https://placehold.co/300x300/e5f1f8/5a89a5?text=PHOTO';
+
+      return `<div style="width:min(100%, 360px); margin:0 auto; padding:16px 10px; font-family:'Apple SD Gothic Neo','Noto Sans KR',Arial,sans-serif; color:#17364d; line-height:1.35; box-sizing:border-box;">
+  <div style="--card-bg:${theme.cardBg}; --line:${theme.line}; --soft-line:${theme.softLine}; --muted:${theme.muted}; --accent:${theme.accent}; background:${theme.cardBg}; border:1px solid ${theme.line}; border-radius:20px; padding:12px; margin-bottom:16px; box-shadow:0 8px 18px rgba(35,90,130,0.10); box-sizing:border-box; overflow:hidden;">
+    <div style="text-align:right; font-size:10px; font-weight:bold; color:${theme.muted}; letter-spacing:0.2px; margin-bottom:6px;">
+      ${escapeHtml(v.headquarters || 'Ghost Management Headquarters')}
+    </div>
+    <div style="height:2px; background:${theme.softLine}; border-radius:999px; margin-bottom:10px;"></div>
+    <div style="display:flex; gap:10px; align-items:stretch; box-sizing:border-box;">
+      <div style="flex:0 0 112px; width:112px; background:#ffffff; border:1px solid ${theme.softLine}; border-radius:15px; padding:6px; box-sizing:border-box; box-shadow:0 5px 12px rgba(35,90,130,0.07);">
+        <img src="${escapeHtml(photo)}" alt="증명사진" style="width:100%; height:112px; object-fit:cover; border-radius:10px; display:block; background:#e5f1f8; box-sizing:border-box;">
+      </div>
+      <div style="flex:1 1 auto; min-width:0; box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between;">
+        <div style="display:flex; gap:7px; align-items:flex-start; margin-bottom:8px; box-sizing:border-box;">
+          <div style="flex:1 1 42%; min-width:0; box-sizing:border-box;">
+            <div style="font-size:8px; color:#7fa9be; font-weight:bold; letter-spacing:0.8px; margin-bottom:2px;">NAME</div>
+            <div style="font-size:17px; line-height:1.1; font-weight:bold; color:#17364d; letter-spacing:-0.4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.name || '이름 없음')}</div>
+          </div>
+          <div style="flex:0 0 auto; max-width:58%; min-width:0; text-align:right; box-sizing:border-box;">
+            <div style="font-size:8px; color:#7fa9be; font-weight:bold; letter-spacing:0.8px; margin-bottom:2px;">HUNTER NO.</div>
+            <div style="display:block; background:#ffffff; border:1px solid ${theme.softLine}; border-radius:999px; padding:3px 7px; font-size:8px; line-height:1.1; font-weight:bold; color:#376f93; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; box-sizing:border-box; text-align:center;">${escapeHtml(v.hunterNo || 'NO-0000')}</div>
+          </div>
+        </div>
+        <div style="display:flex; gap:7px; align-items:center; margin-bottom:8px; box-sizing:border-box;">
+          <div style="flex:1 1 auto; min-width:0; background:#ffffff; border:1px solid ${theme.softLine}; border-radius:13px; padding:7px 8px; box-sizing:border-box;">
+            <div style="font-size:8px; color:#7fa9be; font-weight:bold; letter-spacing:0.8px; margin-bottom:2px;">AFFILIATION</div>
+            <div style="font-size:13px; line-height:1.15; font-weight:bold; color:#245b7b; letter-spacing:-0.3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${escapeHtml(v.affiliation || '소속 없음')}</div>
+          </div>
+          <div style="flex:0 0 32px; width:32px; height:32px; border-radius:50%; background:${theme.accent}; color:#ffffff; display:flex; align-items:center; justify-content:center; font-size:17px; line-height:1; font-weight:bold; box-shadow:0 4px 9px rgba(47,130,183,0.18); box-sizing:border-box;">${escapeHtml(v.rank || 'A')}</div>
+        </div>
+        <div style="text-align:right; font-size:10px; font-weight:bold; color:${theme.muted}; margin-bottom:4px;">${escapeHtml(v.valid || 'Valid by GMH')}</div>
+        <div style="height:18px; border-radius:6px; background:repeating-linear-gradient(90deg,${theme.accent} 0px,${theme.accent} 2px,#ffffff 2px,#ffffff 5px,#8fc2df 5px,#8fc2df 7px,#ffffff 7px,#ffffff 10px); border:1px solid ${theme.softLine}; box-sizing:border-box; opacity:0.82;"></div>
+      </div>
+    </div>
+    <div style="background:#ffffff; border:1px solid ${theme.softLine}; border-radius:13px; padding:6px 9px; margin-top:10px; box-sizing:border-box;">
+      <div style="font-size:10px; color:${theme.muted}; font-weight:bold; letter-spacing:0.1px; word-break:keep-all;">${escapeHtml(v.note || 'Phantom Bay Registered Ghost Hunter')}</div>
+    </div>
+  </div>
+</div>`;
+    }
+
+    function render() {
+      const html = buildCard();
+      preview.innerHTML = html;
+      output.value = html;
+    }
+
+    Object.values(fields).forEach((field) => {
+      field.addEventListener('input', render);
+      field.addEventListener('change', render);
+    });
+
+    document.querySelector('#copyBtn').addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(output.value);
+        toast.textContent = '복사 완료. 이제 원하는 곳에 붙여넣으면 돼.';
+      } catch (error) {
+        output.select();
+        document.execCommand('copy');
+        toast.textContent = '복사했어. 혹시 안 되면 아래 HTML을 직접 복사해줘.';
+      }
+    });
+
+    document.querySelector('#resetBtn').addEventListener('click', () => {
+      Object.entries(fields).forEach(([key, el]) => {
+        el.value = initialValues[key];
+      });
+      toast.textContent = '처음 값으로 돌려놨어.';
+      render();
+    });
+
+    render();
+  </script>
+</body>
+</html>
